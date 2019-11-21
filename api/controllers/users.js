@@ -37,4 +37,32 @@ exports.create = function(params,callback){
 			callback(response_string);
 		}
 	})
-}
+};
+
+exports.update = function(id,params,callback){
+	params = _.omit(params, ['_id', "$$hashKey"]);
+	//console.log(params)
+	Users.findByIdAndUpdate(id,params,function(err,users){
+		if( _.isNull(err) ){
+			var response = genRes.generateResponse(true,"updated successfully");
+			callback(response);
+		}
+		else{
+			var response = genRes.generateResponse(false,"there occured some error : "+err);
+			callback(response);
+		}
+	})
+};
+
+exports.remove = function(id,callback){
+	Users.findByIdAndRemove(id, function (err,users) {
+		if( _.isNull(err) ){
+			var response = genRes.generateResponse(true,"removed successfully");
+			callback(response);
+		}
+		else{
+			var response = genRes.generateResponse(false,"there occured some error : "+err);
+			callback(response);
+		}
+	})
+};
