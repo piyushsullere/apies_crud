@@ -11,5 +11,4 @@ git clone https://github.com/piyushsullere/apies_crud.git
 
 # install dependencies
 npm install
-install body-parser
-install mongoose
+
