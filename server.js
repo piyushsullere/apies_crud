@@ -20,8 +20,8 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 }));
 app.use(bodyParser.json());
 
-var apiRoutes 				= express.Router();
-app.use('/api', apiRoutes);
+// var apiRoutes 				= express.Router();
+app.use('/api', router);
 //apies
 app.get('/api/v1/users/get', apiUsersRouteController.getUsers)
 app.post('/api/v1/users/create', apiUsersRouteController.addUser)
