@@ -1,5 +1,5 @@
 # apies_crud
-crud apies in node js using MVC model with mongo database.
+crud apies in node js using MVC pattern with mongo database.
 
 1 - how to get data from database.
 2 - how to insert data into database.
