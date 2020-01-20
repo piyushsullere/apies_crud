@@ -1,20 +1,34 @@
 const express 		= require('express');
 const app 			= express();
 const router 		= express.Router()
+var bodyParser 		= require('body-parser');
+var mongoose 		= require('mongoose');
+const Pusher 		= require('pusher');
+
+const pusher = new Pusher({
+	appId      : '932875',
+	key        : 'eb03d86eceb52e259c74',
+	secret     : '2047b3ea9071bc92d59f',
+	cluster    : 'ap2',
+	encrypted  : true,
+});
 
 
-
-//middlewares
-var bodyParser 			= require('body-parser');
-var mongoose 			= require('mongoose');
-//var path 				= require('path')
+const channel = 'testapp';
 
 
-//var api
-var apiUsersRouteController = require('./api/routecontrollers/users.js');
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  next();
+});
+
+
+var apiTaskRouteController = require('./api/routecontrollers/tasks.js');
 var genRes      			= require('./api/controllers/genres.js');
 
-//body parser
+
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
 }));
@@ -22,30 +36,48 @@ app.use(bodyParser.json());
 
 
 app.use('/api', router);
-//apies
-app.get('/api/v1/users/get', apiUsersRouteController.getUsers)
-app.post('/api/v1/users/create', apiUsersRouteController.addUser)
-app.post('/api/v1/users/update', apiUsersRouteController.updateUser)
-app.delete('/api/v1/users/remove', apiUsersRouteController.removeUser)
+
+app.get('/api/v1/tasks/get', apiTaskRouteController.getTask)
+app.post('/api/v1/tasks/create', apiTaskRouteController.addTask)
+app.post('/api/v1/tasks/update', apiTaskRouteController.updateTask)
+app.delete('/api/v1/tasks/remove', apiTaskRouteController.removeTask)
 
 
 
 
-//connect mongodb
-const db = require('./config/db').url
-mongoose.connect(db, {
-    useNewUrlParser: true
-}).then(() => {
-    console.log("Successfully connected to the database");    
-}).catch(err => {
-    console.log('Could not connect to the database.', err);
-    process.exit();
+mongoose.connect('mongodb://localhost:27017/sampleDb?replicaSet=myRepl');
+
+const db = mongoose.connection;
+
+db.on('error', console.error.bind(console, 'Connection Error:'));
+
+db.once('open', () => {
+  app.listen(9000, () => {
+    console.log('Node server running on port 9000');
+  });
+
+  const taskCollection = db.collection('testapp');
+  const changeStream = taskCollection.watch();
+    
+  changeStream.on('change', (change) => {
+    console.log(change);
+      
+    if(change.operationType === 'insert') {
+      const task = change.fullDocument;
+      pusher.trigger(
+        channel,
+        'inserted', 
+        {
+          id: task._id,
+          task: task.task,
+        }
+      ); 
+    } else if(change.operationType === 'delete') {
+      pusher.trigger(
+        channel,
+        'deleted', 
+        change.documentKey._id
+      );
+    }
+  });
 });
-
-
-
-
-//port
-app.listen(3000, function(err, data){
-	console.log("server is running on 3000 port")
-})

@@ -1,4 +1,4 @@
 
 module.exports = {
-    url: 'mongodb://localhost:27017/usersdb'
+    url: 'mongodb://localhost:27017/tasksDb?replicaSet=rs'
 }
